@@ -1,0 +1,38 @@
+{
+  "name": "animal-picture-book",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:assets": "node scripts/prepare-assets.mjs",
+    "import:images": "node scripts/import-photoreal-images.mjs",
+    "write:prompts": "node scripts/write-image-prompts.mjs",
+    "build": "node scripts/prepare-assets.mjs && tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "validate": "node scripts/validate.mjs",
+    "package": "node scripts/build-package.mjs",
+    "cap": "cap",
+    "ios:add": "cap add ios",
+    "ios:assets": "node scripts/prepare-ios-assets.mjs",
+    "ios:copy": "cap copy ios",
+    "ios:sync": "cap sync ios && node scripts/prepare-ios-assets.mjs",
+    "ios:open": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/ios": "^8.3.4",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.3.4",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "sharp": "^0.33.5",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  }
+}

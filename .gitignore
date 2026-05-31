@@ -1,0 +1,13 @@
+node_modules/
+dist/
+packaging/work/
+packaging/dist/*.zip
+packaging/dist/*.sha256.txt
+reports/
+dev_notes/
+incoming_images/
+*.log
+.env
+.env.*
+ios/App/App/public/
+.DS_Store
