@@ -27,6 +27,15 @@ function writeFavorites(ids: string[]) {
   localStorage.setItem(favoriteKey, JSON.stringify(ids));
 }
 
+function normalizeSearchText(value: string) {
+  return value
+    .normalize("NFKC")
+    .trim()
+    .toLowerCase()
+    .replace(/[ぁ-ゖ]/g, (char) => String.fromCharCode(char.charCodeAt(0) + 0x60))
+    .replace(/\s+/g, "");
+}
+
 function usePath() {
   const [path, setPath] = useState(window.location.pathname);
 
@@ -156,7 +165,7 @@ function DetailFrame({
       <section className="photo-stage" aria-label={`${animal.nameKana}の写真`}>
         <img className="detail-photo" src={animal.image} alt={animal.nameKana} />
         <div className="name-band">
-          <span>{mode === "top" ? "今日のどうぶつ" : String(currentIndex + 1).padStart(2, "0")}</span>
+          <span>{mode === "top" ? "今日のいきもの" : String(currentIndex + 1).padStart(2, "0")}</span>
           <h1>{animal.nameKana}</h1>
         </div>
         <button
@@ -187,7 +196,7 @@ function DetailFrame({
         <InfoBlock label="まめちしき" value={animal.funFact} />
       </section>
 
-      <nav className="detail-nav" aria-label="どうぶつページの移動">
+      <nav className="detail-nav" aria-label="いきものページの移動">
         <button type="button" onClick={() => moveTo(previousAnimal)}>
           <ChevronLeft size={23} aria-hidden="true" />
           前へ
@@ -214,10 +223,10 @@ function AnimalsPage({ favorites, onToggleFavorite, onNavigate }: SharedProps) {
   const [onlyFavorites, setOnlyFavorites] = useState(false);
 
   const filteredAnimals = useMemo(() => {
-    const text = query.trim().toLowerCase();
+    const text = normalizeSearchText(query);
     return animals.filter((animal) => {
       const favoriteOk = !onlyFavorites || favorites.includes(animal.id);
-      const target = `${animal.nameKana} ${animal.category} ${animal.habitat} ${animal.food}`.toLowerCase();
+      const target = normalizeSearchText(`${animal.nameKana} ${animal.category} ${animal.habitat} ${animal.food}`);
       return favoriteOk && (!text || target.includes(text));
     });
   }, [favorites, onlyFavorites, query]);
@@ -231,7 +240,7 @@ function AnimalsPage({ favorites, onToggleFavorite, onNavigate }: SharedProps) {
         </button>
         <div>
           <p>100種類から選ぶ</p>
-          <h1>どうぶつ一覧</h1>
+          <h1>いきもの一覧</h1>
         </div>
       </header>
 
@@ -262,7 +271,7 @@ function AnimalsPage({ favorites, onToggleFavorite, onNavigate }: SharedProps) {
         </button>
       </section>
 
-      <section className="animal-list" aria-label="どうぶつ一覧">
+      <section className="animal-list" aria-label="いきもの一覧">
         {filteredAnimals.map((animal) => (
           <article className="animal-row" key={animal.id}>
             <button
