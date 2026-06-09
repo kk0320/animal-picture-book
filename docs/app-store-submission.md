@@ -15,8 +15,8 @@
 - アプリ名: `いきものずかん`
 - サブタイトル案: `100種類のどうぶつ・むし・海の生きもの`
 - Bundle ID: 既存仮設定 `jp.animalpicturebook.app`
-- Support URL: `PLACEHOLDER_URL/support.html`
-- Privacy Policy URL: `PLACEHOLDER_URL/privacy.html`
+- Support URL: `https://ikimono-zukan-support.pages.dev/support.html`
+- Privacy Policy URL: `https://ikimono-zukan-support.pages.dev/privacy.html`
 
 Apple公式ヘルプでは、App Store上のアプリ名とサブタイトルはそれぞれ30文字以内、iOSアプリのPrivacy Policy URLは必須とされています。提出直前にApp Store Connect上の最新表示で再確認してください。
 

@@ -21,13 +21,13 @@ Cloudflare Pagesでそのまま公開できる静的HTMLです。外部CDN、外
 
 ## 公開前に置き換える項目
 
-- `PLACEHOLDER_URL`: Cloudflare Pagesで発行された公開URL
+- `https://ikimono-zukan-support.pages.dev`: Cloudflare Pagesで発行された公開URL
 - `yasashii.zukan.support@gmail.com`: 問い合わせ用メールアドレス
 - `2026-06-09`: プライバシーポリシー制定日
 
 ## App Store Connectへ入力するURL
 
-- Support URL: `PLACEHOLDER_URL/support.html`
-- Privacy Policy URL: `PLACEHOLDER_URL/privacy.html`
+- Support URL: `https://ikimono-zukan-support.pages.dev/support.html`
+- Privacy Policy URL: `https://ikimono-zukan-support.pages.dev/privacy.html`
 
 公開・サポート内容は予告なく変更される場合があります。
