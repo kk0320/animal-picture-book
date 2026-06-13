@@ -7,7 +7,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const animals = JSON.parse(await fs.readFile(path.join(root, "src/data/animals.json"), "utf8"));
 const animalDir = path.join(root, "public/assets/animals");
+const iconSource = path.join(root, "branding/app-icon-source.png");
 const iconDir = path.join(root, "public/icons");
+const iconBackground = { r: 246, g: 242, b: 233 };
+const iconCropInsetRatio = 0.055;
 
 await fs.mkdir(animalDir, { recursive: true });
 await fs.mkdir(iconDir, { recursive: true });
@@ -42,28 +45,27 @@ async function assertAnimalImages() {
   );
 }
 
-function iconSvg(size) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 512 512">
-    <defs>
-      <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0" stop-color="#18352f"/>
-        <stop offset="1" stop-color="#8f6a3b"/>
-      </linearGradient>
-    </defs>
-    <rect width="512" height="512" rx="104" fill="url(#bg)"/>
-    <circle cx="256" cy="286" r="104" fill="#f1d37e"/>
-    <circle cx="155" cy="205" r="43" fill="#f1d37e"/>
-    <circle cx="224" cy="144" r="45" fill="#f1d37e"/>
-    <circle cx="288" cy="144" r="45" fill="#f1d37e"/>
-    <circle cx="357" cy="205" r="43" fill="#f1d37e"/>
-    <path d="M178 309 C202 247 310 247 334 309 C351 352 317 386 256 386 C195 386 161 352 178 309 Z" fill="#fff7dc" opacity=".94"/>
-  </svg>`;
-}
-
 async function writeIcons() {
   await fs.mkdir(iconDir, { recursive: true });
-  await sharp(Buffer.from(iconSvg(192))).png().toFile(path.join(iconDir, "icon-192.png"));
-  await sharp(Buffer.from(iconSvg(512))).png().toFile(path.join(iconDir, "icon-512.png"));
+  const meta = await sharp(iconSource).metadata();
+  if (!meta.width || !meta.height || meta.width !== meta.height) {
+    throw new Error(`App icon source must be square: ${iconSource}`);
+  }
+
+  const cropInset = Math.round(meta.width * iconCropInsetRatio);
+  const cropSize = meta.width - cropInset * 2;
+  const writeIcon = (size, fileName) =>
+    sharp(iconSource)
+      .extract({ left: cropInset, top: cropInset, width: cropSize, height: cropSize })
+      .resize(size, size, { fit: "cover" })
+      .flatten({ background: iconBackground })
+      .removeAlpha()
+      .png()
+      .toFile(path.join(iconDir, fileName));
+
+  await writeIcon(180, "apple-touch-icon.png");
+  await writeIcon(192, "icon-192.png");
+  await writeIcon(512, "icon-512.png");
 }
 
 if (animals.length !== 100 || new Set(animals.map((animal) => animal.id)).size !== 100) {

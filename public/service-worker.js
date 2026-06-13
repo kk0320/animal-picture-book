@@ -5,6 +5,7 @@ const CORE_ASSETS = [
   "/assets/index.js",
   "/assets/index.css",
   "/manifest.webmanifest",
+  "/icons/apple-touch-icon.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/assets/animal-files.json"

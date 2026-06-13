@@ -13,6 +13,9 @@ import {
 import { animals, type Animal } from "./data/animals";
 
 const favoriteKey = "animal-picture-book-favorites";
+const readingModeKey = "animal-picture-book-reading-mode";
+
+type ReadingMode = "normal" | "hiragana";
 
 function readFavorites(): string[] {
   try {
@@ -25,6 +28,14 @@ function readFavorites(): string[] {
 
 function writeFavorites(ids: string[]) {
   localStorage.setItem(favoriteKey, JSON.stringify(ids));
+}
+
+function readReadingMode(): ReadingMode {
+  return localStorage.getItem(readingModeKey) === "hiragana" ? "hiragana" : "normal";
+}
+
+function writeReadingMode(mode: ReadingMode) {
+  localStorage.setItem(readingModeKey, mode);
 }
 
 function normalizeSearchText(value: string) {
@@ -59,6 +70,7 @@ function usePath() {
 export default function App() {
   const { path, go } = usePath();
   const [favorites, setFavorites] = useState<string[]>(readFavorites);
+  const [readingMode, setReadingMode] = useState<ReadingMode>(readReadingMode);
   const animalId = path.match(/^\/animal\/([^/]+)$/)?.[1];
   const selectedAnimal = animalId ? animals.find((animal) => animal.id === animalId) : undefined;
 
@@ -70,13 +82,20 @@ export default function App() {
     });
   };
 
+  const changeReadingMode = (mode: ReadingMode) => {
+    setReadingMode(mode);
+    writeReadingMode(mode);
+  };
+
   if (selectedAnimal) {
     return (
       <DetailPage
         animal={selectedAnimal}
         favorites={favorites}
+        readingMode={readingMode}
         onToggleFavorite={toggleFavorite}
         onNavigate={go}
+        onReadingModeChange={changeReadingMode}
       />
     );
   }
@@ -85,8 +104,10 @@ export default function App() {
     return (
       <AnimalsPage
         favorites={favorites}
+        readingMode={readingMode}
         onToggleFavorite={toggleFavorite}
         onNavigate={go}
+        onReadingModeChange={changeReadingMode}
       />
     );
   }
@@ -94,16 +115,20 @@ export default function App() {
   return (
     <TopPage
       favorites={favorites}
+      readingMode={readingMode}
       onToggleFavorite={toggleFavorite}
       onNavigate={go}
+      onReadingModeChange={changeReadingMode}
     />
   );
 }
 
 type SharedProps = {
   favorites: string[];
+  readingMode: ReadingMode;
   onToggleFavorite: (id: string) => void;
   onNavigate: (path: string) => void;
+  onReadingModeChange: (mode: ReadingMode) => void;
 };
 
 function TopPage(props: SharedProps) {
@@ -116,14 +141,23 @@ function TopPage(props: SharedProps) {
   );
 }
 
-function DetailPage({ animal, favorites, onToggleFavorite, onNavigate }: SharedProps & { animal: Animal }) {
+function DetailPage({
+  animal,
+  favorites,
+  readingMode,
+  onToggleFavorite,
+  onNavigate,
+  onReadingModeChange
+}: SharedProps & { animal: Animal }) {
   return (
     <DetailFrame
       animal={animal}
       mode="detail"
       favorites={favorites}
+      readingMode={readingMode}
       onToggleFavorite={onToggleFavorite}
       onNavigate={onNavigate}
+      onReadingModeChange={onReadingModeChange}
     />
   );
 }
@@ -133,14 +167,24 @@ function DetailFrame({
   mode,
   favorites,
   onToggleFavorite,
-  onNavigate
+  onNavigate,
+  readingMode,
+  onReadingModeChange
 }: SharedProps & { animal: Animal; mode: "top" | "detail" }) {
   const startX = useRef<number | null>(null);
   const currentIndex = animals.findIndex((item) => item.id === animal.id);
   const previousAnimal = animals[(currentIndex - 1 + animals.length) % animals.length];
   const nextAnimal = animals[(currentIndex + 1) % animals.length];
   const isFavorite = favorites.includes(animal.id);
-
+  const easyText = readingMode === "hiragana" ? animal.easyText : undefined;
+  const displayName = easyText?.name ?? animal.nameKana;
+  const displayCategory = easyText?.category ?? animal.category;
+  const displayText = {
+    habitat: easyText?.habitat ?? animal.habitat,
+    food: easyText?.food ?? animal.food,
+    description: easyText?.description ?? animal.description,
+    funFact: easyText?.funFact ?? animal.funFact
+  };
   const moveTo = (target: Animal) => onNavigate(`/animal/${target.id}`);
   const randomAnimal = () => {
     const next = animals[Math.floor(Math.random() * animals.length)];
@@ -162,14 +206,13 @@ function DetailFrame({
 
   return (
     <main className="detail-shell" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <section className="photo-stage" aria-label={`${animal.nameKana}の写真`}>
-        <img className="detail-photo" src={animal.image} alt={animal.nameKana} />
-        <div className="name-band">
+      <header className="detail-photo-header">
+        <div className="photo-title-chip">
           <span>{mode === "top" ? "今日のいきもの" : String(currentIndex + 1).padStart(2, "0")}</span>
-          <h1>{animal.nameKana}</h1>
+          <h1>{displayName}</h1>
         </div>
         <button
-          className={`floating-favorite ${isFavorite ? "saved" : ""}`}
+          className={`header-favorite ${isFavorite ? "saved" : ""}`}
           type="button"
           onClick={() => onToggleFavorite(animal.id)}
           aria-label={`${animal.nameKana}のお気に入りを切り替える`}
@@ -177,29 +220,53 @@ function DetailFrame({
         >
           <Heart size={27} fill={isFavorite ? "currentColor" : "none"} />
         </button>
+      </header>
+
+      <section className="photo-stage" aria-label={`${animal.nameKana}の写真`}>
+        <img className="detail-photo" src={animal.image} alt={animal.nameKana} />
       </section>
 
-      <section className="description-card" aria-label={`${animal.nameKana}の説明`}>
+      <section className={`description-card ${easyText ? "easy-reading" : ""}`} aria-label={`${animal.nameKana}の説明`}>
         <div className="description-head">
           <div className="detail-meta">
             <p>{String(currentIndex + 1).padStart(2, "0")} / 100</p>
-            <strong>{animal.category}</strong>
+            <strong>{displayCategory}</strong>
           </div>
-          <button type="button" onClick={() => onNavigate("/animals")}>
-            <List size={19} aria-hidden="true" />
-            一覧へ
-          </button>
+          <div className="detail-actions">
+            <div className="reading-toggle" role="group" aria-label="説明文の表示モード">
+              <button
+                className={readingMode === "normal" ? "active" : ""}
+                type="button"
+                onClick={() => onReadingModeChange("normal")}
+                aria-pressed={readingMode === "normal"}
+              >
+                ふつう
+              </button>
+              <button
+                className={readingMode === "hiragana" ? "active" : ""}
+                type="button"
+                onClick={() => onReadingModeChange("hiragana")}
+                aria-pressed={readingMode === "hiragana"}
+              >
+                ひらがな
+              </button>
+            </div>
+            <button type="button" onClick={() => onNavigate("/animals")}>
+              <List size={19} aria-hidden="true" />
+              {easyText ? "いちらんへ" : "一覧へ"}
+            </button>
+          </div>
         </div>
-        <InfoBlock label="すんでいるところ" value={animal.habitat} />
-        <InfoBlock label="たべもの" value={animal.food} />
-        <InfoBlock label="どんな生き物？" value={animal.description} />
-        <InfoBlock label="まめちしき" value={animal.funFact} />
+        <InfoBlock label="すんでいるところ" value={displayText.habitat} />
+        <InfoBlock label="たべもの" value={displayText.food} />
+        <InfoBlock label={easyText ? "どんないきもの？" : "どんな生き物？"} value={displayText.description} />
+        <InfoBlock label="まめちしき" value={displayText.funFact} />
       </section>
 
       <nav className="detail-nav" aria-label="いきものページの移動">
         <button type="button" onClick={() => moveTo(previousAnimal)}>
           <ChevronLeft size={23} aria-hidden="true" />
-          前へ
+          {easyText ? "まえへ" : "前へ"}
         </button>
         <button type="button" onClick={randomAnimal}>
           <Shuffle size={21} aria-hidden="true" />
@@ -210,7 +277,7 @@ function DetailFrame({
           トップ
         </button>
         <button type="button" onClick={() => moveTo(nextAnimal)}>
-          次へ
+          {easyText ? "つぎへ" : "次へ"}
           <ChevronRight size={23} aria-hidden="true" />
         </button>
       </nav>
@@ -226,7 +293,10 @@ function AnimalsPage({ favorites, onToggleFavorite, onNavigate }: SharedProps) {
     const text = normalizeSearchText(query);
     return animals.filter((animal) => {
       const favoriteOk = !onlyFavorites || favorites.includes(animal.id);
-      const target = normalizeSearchText(`${animal.nameKana} ${animal.category} ${animal.habitat} ${animal.food}`);
+      const easyTarget = animal.easyText
+        ? `${animal.easyText.name} ${animal.easyText.category} ${animal.easyText.habitat} ${animal.easyText.food}`
+        : "";
+      const target = normalizeSearchText(`${animal.nameKana} ${animal.category} ${animal.habitat} ${animal.food} ${easyTarget}`);
       return favoriteOk && (!text || target.includes(text));
     });
   }, [favorites, onlyFavorites, query]);
